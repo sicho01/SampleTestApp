@@ -1,0 +1,29 @@
+fastlane_require 'dotenv'
+
+default_platform(:android)
+
+platform :android do
+  lane :codepush_staging do |options|
+    Dotenv.overload '../../.env'
+
+    if options[:target]
+      upload_codepush(target: options[:target], deployment: "Staging")
+    else
+      UI.error "target_version not exist"
+    end
+  end
+
+  private_lane :upload_codepush do |options|
+    CODEPUSH_APP = "seoik.cho/SampleTestApp"
+    TARGET_VERSION = options[:target]
+    DEPLOYMENT = options[:deployment]
+    package_path = "../package.json"
+    
+    Dir.chdir("../..") do
+      sh("appcenter codepush release-react -a #{CODEPUSH_APP} -d #{DEPLOYMENT} -t ~#{TARGET_VERSION}")
+    end
+
+    # upload sourcemap to rollbar
+    package_json = read_json(json_path: package_path)
+  end
+end
